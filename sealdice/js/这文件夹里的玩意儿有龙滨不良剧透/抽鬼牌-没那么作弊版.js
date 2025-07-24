@@ -1,0 +1,249 @@
+// ==UserScript==
+// @name         抽鬼牌-没那么作弊版
+// @author       Fehling0v0
+// @version      1.5.0
+// @description  我们增加了Joker牌的戏份。
+// @timestamp    2025-7-17
+// @license      Apache-2
+// @homepageURL  https://github.com/Fehling0v0/TRPG
+// ==/UserScript==
+
+let ext = seal.ext.find('OldMaid3');
+if (!ext) {
+  ext = seal.ext.new('OldMaid3', 'Fehling0v0', '1.0.0');
+  seal.ext.register(ext);
+}
+
+let extEnabled3 = false;
+
+ext.onNotCommandReceived = (ctx, msg) => {
+  const message = msg.message;
+  
+  if (message === 'Oldmaid on') {
+    extEnabled3 = true;
+    seal.replyToSender(ctx, msg, '抽鬼牌插件已激活');
+    return;
+  } else if (message === 'Oldmaid off') {
+    extEnabled3 = false;
+    seal.replyToSender(ctx, msg, '抽鬼牌插件已停用');
+    return;
+  }
+  
+  if (!extEnabled3) return;
+  
+  const qq = seal.format(ctx,"{$t账号ID_RAW}");
+  const groupId = seal.format(ctx,"{$t群号_RAW}");
+  
+
+  if (message === "发牌") {
+    seal.replyToSender(ctx, msg, "发牌需要指定两名玩家，格式：发牌 <玩家1昵称>@玩家1 <玩家2昵称>@玩家2");
+  } else if (message.startsWith("发牌 ")) {
+
+    const pattern = /发牌\s+(.*?)\[CQ:at,qq=(\d+)\]\s+(.*?)\[CQ:at,qq=(\d+)\]/;
+    const playermatch = message.match(pattern); 
+
+    if (playermatch) {
+    
+      const player1Name = playermatch[1];
+      const player1 = playermatch[2];
+      const player2Name = playermatch[3];
+      const player2 = playermatch[4];
+      handleDealCards(ctx, msg, player1, player2, player1Name, player2Name);
+
+      //seal.replyToSender(ctx, msg, `发牌成功，${player1Name}和${player2Name}开始游戏`);
+
+    } else {
+      seal.replyToSender(ctx, msg, "发牌需要指定两名玩家，格式：发牌 <玩家1昵称>@玩家1 <玩家2昵称>@玩家2");
+    }
+  } else if (message === "抽牌") {
+    handleDrawCard(ctx, msg, qq);
+  } else if (message === "明牌") {
+    handleShowCards(ctx, msg, qq);
+  } else if (message === "结束") {
+    handleEndGame(ctx, msg, qq);
+  }
+};
+
+
+function handleDealCards(ctx, msg, player1, player2, player1Name, player2Name) {
+  const groupId = seal.format(ctx,"{$t群号_RAW}");
+  try {
+    // 创建并洗牌
+    let deck = createDeck();
+    deck = shuffleDeck(deck);
+
+    // 发牌
+    const player1Hand = deck.slice(0, 26);
+    const player2Hand = deck.slice(26);
+    
+    // 初始化游戏状态
+    gameState[player1] = { hand: player1Hand, opponent: player2 ,name:player1Name };
+
+    gameState[player2] = { hand: player2Hand, opponent: player1 ,name:player2Name };
+
+    
+    // 移除成对的牌
+    const player1Result = removePairs(player1Hand);
+    const player2Result = removePairs(player2Hand);
+    
+    gameState[player1].hand = player1Result.newHand;
+    gameState[player2].hand = player2Result.newHand;
+    
+    // 私聊展示手牌 - 使用 seal.replyToSender 替代 replyPrivate
+    const msg1 = seal.newMessage();
+    msg1.messageType = "private";
+    msg1.sender.userId = "QQ:"+player1;
+    seal.replyToSender(seal.createTempCtx(ctx.endPoint, msg1), msg1, `你的手牌：${gameState[player1].hand.join(', ')}`);
+    
+    const msg2 = seal.newMessage();
+    msg2.messageType = "private";
+    msg2.sender.userId = "QQ:"+player2;
+    seal.replyToSender(seal.createTempCtx(ctx.endPoint, msg2), msg2, `你的手牌：${gameState[player2].hand.join(', ')}`);
+    
+    // 大群内回复
+    seal.replyToSender(ctx, msg, `发牌完毕\n玩家 ${player1Name} 打出的牌：${player1Result.pairs.join(', ') || '无'}\n剩余手牌：${generateHandCountBars(gameState[player1].hand.length)}\n玩家 ${player2Name} 打出的牌：${player2Result.pairs.join(', ') || '无'}\n剩余手牌：${generateHandCountBars(gameState[player2].hand.length)}`);
+
+  } catch (e) {
+    seal.replyToSender(ctx, msg, `发牌过程中出现错误: ${e.message}`);
+  }
+}
+
+// 抽牌指令处理函数
+function handleDrawCard(ctx, msg, player) {
+  const groupId = seal.format(ctx,"{$t群号_RAW}");
+  if (!gameState[player]) {
+    seal.replyToSender(ctx, msg, '你不在游戏中，无法抽牌。');
+    return;
+  }
+  
+  const opponent = gameState[player].opponent;
+  const opponentHand = gameState[opponent].hand;
+  const playerName = gameState[player].name;
+  const opponentName = gameState[opponent].name;
+  
+  if (opponentHand.length === 0) {
+    seal.replyToSender(ctx, msg, '对方没有手牌了，无法抽牌。');
+    return;
+  }
+  
+  // 随机抽取一张牌
+  let drawnCard;
+  if (opponentHand.length > 2 && opponentHand.includes('Joker')) {
+    const random = Math.random();
+    if (random <= 0.4) {
+      const jokerIndex = opponentHand.indexOf('Joker');
+      drawnCard = opponentHand.splice(jokerIndex, 1)[0];
+    } else {
+      const randomIndex = Math.floor(Math.random() * opponentHand.length);
+      drawnCard = opponentHand.splice(randomIndex, 1)[0];
+    }
+  } else if (opponentHand.length > 1 && opponentHand.includes('Joker')) {
+    const random = Math.random();
+    if (random <= 0.3) {
+      const jokerIndex = opponentHand.indexOf('Joker');
+      drawnCard = opponentHand.splice(jokerIndex, 1)[0];
+    } else {
+      const randomIndex = Math.floor(Math.random() * opponentHand.length);
+      drawnCard = opponentHand.splice(randomIndex, 1)[0];
+    }
+  } else {
+    const randomIndex = Math.floor(Math.random() * opponentHand.length);
+    drawnCard = opponentHand.splice(randomIndex, 1)[0];
+  }
+  gameState[player].hand.push(drawnCard);
+  
+  // 移除成对的牌
+  const result = removePairs(gameState[player].hand);
+  gameState[player].hand = result.newHand;
+  
+  // 私聊展示手牌
+  const privateMsg1 = seal.newMessage();
+  privateMsg1.messageType = "private";
+  privateMsg1.sender.userId = "QQ:"+player;
+  seal.replyToSender(seal.createTempCtx(ctx.endPoint, privateMsg1), privateMsg1, `你抽到了 ${drawnCard}，打出的牌：${result.pairs.join(', ') || '无'}，当前手牌：${gameState[player].hand.join(', ')}`);
+  
+  const privateMsg2 = seal.newMessage();
+  privateMsg2.messageType = "private";
+  privateMsg2.sender.userId = "QQ:"+opponent;
+  seal.replyToSender(seal.createTempCtx(ctx.endPoint, privateMsg2), privateMsg2, `对方抽到了 ${drawnCard}，你当前手牌：${gameState[opponent].hand.join(', ')}`);
+
+  
+  // 大群内回复
+  seal.replyToSender(ctx, msg, `玩家 ${playerName} 抽到了 ${drawnCard}\n打出的牌：${result.pairs.join(', ') || '无'}\n玩家 ${playerName} 剩余手牌：${generateHandCountBars(gameState[player].hand.length)}\n玩家 ${opponentName} 剩余手牌：${generateHandCountBars(gameState[opponent].hand.length)}`);
+
+}
+
+// 明牌指令
+function handleShowCards(ctx, msg, player) {
+  const groupId = seal.format(ctx,"{$t群号_RAW}");
+  if (!gameState[player]) {
+    seal.replyToSender(ctx, msg, '你不在游戏中，无法明牌。');
+    return;
+  }
+  const playerName = gameState[player].name;
+  seal.replyToSender(ctx, msg, `玩家 ${playerName} 的剩余手牌：${gameState[player].hand.join(', ')}`);
+}
+
+function handleEndGame(ctx, msg, player) {
+  const groupId = seal.format(ctx,"{$t群号_RAW}");
+  if (!gameState[player]) {
+    seal.replyToSender(ctx, msg, '你不在游戏中，无需结束游戏。');
+    return;
+  }
+  
+  const opponent = gameState[player].opponent;
+  delete gameState[player];
+  delete gameState[opponent];
+  
+  seal.replyToSender(ctx, msg, '游戏已结束。');
+}
+
+// 游戏状态存储
+const gameState = {};
+
+// 创建一副去除一张 Joker 的牌
+function createDeck() {
+  const suits = ['♠', '♥', '♣', '♦'];
+  const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  const deck = [];
+  
+  for (const suit of suits) {
+    for (const rank of ranks) {
+      deck.push(rank + suit);
+    }
+  }
+  
+  // 增加一张Joker牌
+  deck.push('Joker');
+  return deck;
+}
+
+// 洗牌函数
+function shuffleDeck(deck) {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+// 查找并移除成对的牌
+function removePairs(hand) {
+  const pairs = [];
+  const sortedHand = [...hand].sort();
+  let i = 0;
+  while (i < sortedHand.length - 1) {
+    if (sortedHand[i].slice(0, -1) === sortedHand[i + 1].slice(0, -1)) {
+      pairs.push(sortedHand[i], sortedHand[i + 1]);
+      sortedHand.splice(i, 2);
+    } else {
+      i++;
+    }
+  }
+  return { newHand: sortedHand, pairs };
+}
+
+// 生成手牌数量条
+function generateHandCountBars(count) {
+  return '▊'.repeat(count+1);
+}
