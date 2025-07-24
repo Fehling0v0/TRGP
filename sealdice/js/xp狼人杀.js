@@ -148,7 +148,7 @@ function joinGame(ctx, msg, groupId, qq) {
 			seal.replyToSender(ctx, msg, "本局游戏已经开始了")
 			return false;
 		}
-		if (Object.keys(group[groupId].gamer).length === 8) {
+		if (Object.keys(group[groupId].gamer).length === 100) {
 			seal.replyToSender(ctx, msg, "本局游戏人数已满")
 			return false;
 		}
@@ -165,7 +165,7 @@ function joinGame(ctx, msg, groupId, qq) {
 	for (let i = 0; i < Object.keys(group[groupId].gamer).length; i++) {
 		memberList += `\n${i+1}:[CQ:at,qq=${Object.keys(group[groupId].gamer)[i]}]`
 	}
-	seal.replyToSender(ctx, msg, `[CQ:at,qq=${qq}] 加入了本局XP狼人杀！\n当前人员:${memberList}\n提示:当游戏人员为5-8人时，发送[开始XP狼人杀]可以开始本局游戏。`)
+	seal.replyToSender(ctx, msg, `[CQ:at,qq=${qq}] 加入了本局XP狼人杀！\n当前人员:${memberList}\n提示:当游戏人员为3-100人时，发送[开始XP狼人杀]可以开始本局游戏。`)
 	saveGroup()
 	return true;
 }
@@ -553,8 +553,7 @@ function showHelp(ctx, msg) {
 	let reply3 = '注意：关于xp重复的情况，被选中的狼人会收到来自骰子的小窗提示，未收到消息则不是狼人。\n' +
 		'如果在小窗录入xp时出现“你不在本局游戏内”的提示，一般是由于尚未使用“开始xp狼人杀”指令。使用这个指令后游戏状态才会转为已开始。\n' +
 		'不建议玩家在多个群内同时进行游戏，可能会导致游戏数据混乱。\n' +
-		'@人时请使用@（这说的什么话（总之意思是请不要使用复制粘贴\n' +
-		'测试版本遗留产物：其实人数3人及以上就能开游戏（）';
+		'@人时请使用@（这说的什么话（总之意思是请不要使用复制粘贴\n';
 	seal.replyToSender(ctx, msg, reply1);
 	seal.replyToSender(ctx, msg, reply2);
 	seal.replyToSender(ctx, msg, reply3);
