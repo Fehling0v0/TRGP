@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         抽鬼牌-无作弊版
+// @name         抽鬼牌
 // @author       Fehling0v0
-// @version      1.5.0
+// @version      1.0.0
 // @description  指令：OldMaid on/off 发牌 抽牌 明牌 结束
 // @timestamp    2025-7-17
 // @license      Apache-2
