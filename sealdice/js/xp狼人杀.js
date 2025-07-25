@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         xp狼人杀
 // @author       Fehling0v0
-// @version      1.0.1
+// @version      1.0.2
 // @description  不一定靠谱的测试版，使用【help xp狼人杀】查看指令
 // @timestamp    2025-07-24
 // @license      Apache-2
@@ -12,7 +12,7 @@
 let ext;
 
 if (!seal.ext.find('XP狼人杀')) {
-  ext = seal.ext.new('XP狼人杀','Fehling0v0','1.0.1');
+  ext = seal.ext.new('XP狼人杀','Fehling0v0','1.0.2');
   seal.ext.register(ext);
 } else {
   ext = seal.ext.find('XP狼人杀');
