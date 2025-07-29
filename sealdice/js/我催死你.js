@@ -44,7 +44,7 @@ ext.onNotCommandReceived = (ctx, msg) => {
         return; 
     }
     if (message === "help 我催死你2.0") {
-        let help2 ='2.0更新：防神人保险\n' +
+        let help2 ='2.0更新：\n' +
             '限制消息回复频率为三分钟及以上。\n' +
             '催促达到100次后自动取消任务。\n' + 
             '任务创建者指令：【show key 催】 查看你发起的所有任务的秘钥\n' +
