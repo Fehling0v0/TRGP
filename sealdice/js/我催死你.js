@@ -53,7 +53,7 @@ ext.onNotCommandReceived = (ctx, msg) => {
             '【set admin 催】 设置当前账号为管理员（需要拥有骰主权限）\n' +
             '【delete admin 催】 删除当前账号的管理员权限\n' +
             '管理员只能设置一位。设置管理员之后可以使用以下指令，且每当有人新建催促任务时管理员均会收到提示\n' +
-            '【show all 催】 查看当前所有任务\n' +
+            '【show all 催】 查看当前所有任务的信息及秘钥\n' +
             '【delete all 催】 删除所有任务';
         seal.replyToSender(ctx, msg, help2);
         return;
@@ -96,7 +96,7 @@ ext.onNotCommandReceived = (ctx, msg) => {
             let replyMsg = "";
             const tasks = JSON.parse(ext.storageGet("reminderTasks") || '{}');
             for (let taskId in tasks) {
-                replyMsg = replyMsg + `群号${tasks[taskId].groupId}，发起者${tasks[taskId].creatorQQ}，催促对象${tasks[taskId].targetQQ}，频率${tasks[taskId].intervalStr}，秘钥${tasks[taskId].secretKey}\n`;
+                replyMsg = replyMsg + `群号：${tasks[taskId].groupId}，发起者：${tasks[taskId].creatorQQ}，催促对象：${tasks[taskId].targetQQ}，动作：${tasks[taskId].action}，频率：${tasks[taskId].intervalStr}，秘钥：${tasks[taskId].secretKey}\n`;
             }
             if (replyMsg === "") {
                 replyMsg = "当前没有任务。";
@@ -250,16 +250,7 @@ ext.onNotCommandReceived = (ctx, msg) => {
                     clearInterval(timerId);
                     return;
                 }                
-                count++;
-                if(count>10){
-                    seal.replyToSender(ctx, msg, `任务催[CQ:at,qq=${task.targetQQ}] ${task.action}已执行10次，已停止。`);
-                    //删除任务
-                    delete currentTasks[taskId];
-                    ext.storageSet("reminderTasks", JSON.stringify(currentTasks));
-                    clearInterval(timerId);
-                    return;
-                }
-                
+
                 const groupMsg = seal.newMessage();
                 groupMsg.messageType = "group";
                 groupMsg.groupId = `QQ-Group:${task.groupId}`;
@@ -271,6 +262,17 @@ ext.onNotCommandReceived = (ctx, msg) => {
                 privateMsg.sender.userId = `QQ:${task.targetQQ}`;
                 privateMsg.message = ` ${task.action}！！！！！`;
                 seal.replyToSender(seal.createTempCtx(ctx.endPoint, privateMsg), privateMsg, privateMsg.message);
+
+                count++;
+                if(count == 100){
+                    seal.replyToSender(ctx, msg, `任务催[CQ:at,qq=${task.targetQQ}] ${task.action}已执行100次，已停止。`);
+                    //删除任务
+                    delete currentTasks[taskId];
+                    ext.storageSet("reminderTasks", JSON.stringify(currentTasks));
+                    clearInterval(timerId);
+                    return;
+                }
+
             } catch (e) {
                 console.error("催不动了:", e);
             }            
