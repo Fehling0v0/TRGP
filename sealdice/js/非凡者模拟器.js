@@ -1,3 +1,4 @@
+// ==UserScript==
 // @name         非凡者模拟器
 // @author       Fehling0v0
 // @version      1.0.0
@@ -114,7 +115,7 @@ ext.onNotCommandReceived = (ctx, msg) => {
                // "6. 查看状态 - 查看当前序列、消化度等信息\n" +
                // "7. 我是皇帝，消化度+[数字] - 测试指令，增加指定消化度\n" +
                // "8. 我是皇帝，更换到[途径名] - 测试指令，不受条件限制更换途径\n" +
-               // "9. 清空信息 - 重置当前用户的所有非凡者数据\n" +
+               // "9. 三二一重开我不要当桂皮了_清空信息 - 重置当前用户的所有非凡者数据\n" +
                // "\n消化度达到50、100、200、500、1000、2000、5000、10000、20000时分别晋升序列八至序列零\n" +
                 "请谨慎选择途径，序列四后仅可更换一次途径，且只能在相邻途径内更换。";
     seal.replyToSender(ctx, msg, reply);
@@ -359,7 +360,7 @@ ext.onNotCommandReceived = (ctx, msg) => {
   }
 
   // 清空信息指令
-  if (message === "清空信息") {
+  if (message === "三二一重开我不要当桂皮了_清空信息") {
     delete userData[qq];
     ext.storageSet("userData", JSON.stringify(userData));
     seal.replyToSender(ctx, msg, "已清空您的所有非凡者数据，可重新选择途径开始。");
