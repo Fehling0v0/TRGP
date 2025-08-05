@@ -6,6 +6,8 @@
 // @timestamp    2025-07-29
 // @license      Apache-2
 // @homepageURL  https://github.com/Fehling0v0/TRPG
+// @updateUrl    https://raw.githubusercontent.com/Fehling0v0/TRPG/refs/heads/main/sealdice/js/%E6%88%91%E5%82%AC%E6%AD%BB%E4%BD%A0.js
+// @updateUrl    https://ghfast.top/https://raw.githubusercontent.com/Fehling0v0/TRPG/refs/heads/main/sealdice/js/%E6%88%91%E5%82%AC%E6%AD%BB%E4%BD%A0.js
 // ==/UserScript==
 
 
@@ -204,12 +206,12 @@ ext.onNotCommandReceived = (ctx, msg) => {
             case 'd': intervalMs = intervalNum * 24 * 60 * 60 * 1000; break;
             default: intervalMs = 3 * 60 * 60 * 1000; // 默认3小时
         }
-/*
+
         if (intervalNum < 180000) {
             seal.replyToSender(ctx, msg, "时间间隔过短，拒绝执行该任务。最小时间间隔为三分钟。");
             return;
         }
-        */
+        
         
         // 创建定时任务
         const taskId = `task_${Date.now()}`;
