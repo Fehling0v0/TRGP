@@ -5,6 +5,8 @@
 // @timestamp    2025-08-05
 // @license      Apache-2
 // @homepageURL  https://github.com/Fehling0v0/TRPG/tree/main/sealdice/js
+// @updateUrl    https://raw.githubusercontent.com/Fehling0v0/TRPG/refs/heads/main/sealdice/js/%E9%9D%9E%E5%87%A1%E8%80%85%E6%A8%A1%E6%8B%9F%E5%99%A8.js
+// @updateUrl    https://ghfast.top/https://raw.githubusercontent.com/Fehling0v0/TRPG/refs/heads/main/sealdice/js/%E9%9D%9E%E5%87%A1%E8%80%85%E6%A8%A1%E6%8B%9F%E5%99%A8.js
 // ==/UserScript==
 
 let ext = seal.ext.find('非凡者');
