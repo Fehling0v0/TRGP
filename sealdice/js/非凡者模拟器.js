@@ -98,7 +98,9 @@ ext.onNotCommandReceived = (ctx, msg) => {
       "digestion": 0,
       "signInDate": 0,
       "sacrificeCount": 0,
+      "sacrificeDate": 0,
       "actCount": 0,
+      "actDate": 0,
       "canChangePath": true
     };
     ext.storageSet("userData", JSON.stringify(userData));
@@ -123,8 +125,8 @@ ext.onNotCommandReceived = (ctx, msg) => {
   }
 
   // 查看状态
-  /*
-  if (message === "查看状态") {
+
+  if (message === "11111查看状态") {
     let user = userData[qq];
     if (!user.path) {
       seal.replyToSender(ctx, msg, "您尚未选择途径，请使用'选择途径/选择序列 [途径名/序列名]'指令选择途径。");
@@ -142,7 +144,7 @@ ext.onNotCommandReceived = (ctx, msg) => {
                 `是否可更换途径：${user.canChangePath && user.sequenceLevel <= 4 ? '是' : '否'}`;
     seal.replyToSender(ctx, msg, reply);
     return;
-  }*/
+  }
 
   // 签到功能
   if (message === "签到") {
@@ -178,6 +180,12 @@ ext.onNotCommandReceived = (ctx, msg) => {
       seal.replyToSender(ctx, msg, "您尚未选择途径，请先选择途径。");
       return;
     }
+    // 检查日期是否变更，如果是则重置计数器
+    if (user.sacrificeDate !== date) {
+      user.sacrificeDate = date;
+      user.sacrificeCount = 0;
+      ext.storageSet("userData", JSON.stringify(userData));
+    }
     if (user.sacrificeCount >= 3) {
       seal.replyToSender(ctx, msg, "您今日献祭次数已达上限，请明日再来。");
       return;
@@ -209,6 +217,12 @@ ext.onNotCommandReceived = (ctx, msg) => {
     if (!user.path) {
       seal.replyToSender(ctx, msg, "您尚未选择途径，请先选择途径。");
       return;
+    }
+    // 检查日期是否变更，如果是则重置计数器
+    if (user.actDate !== date) {
+      user.actDate = date;
+      user.actCount = 0;
+      ext.storageSet("userData", JSON.stringify(userData));
     }
     if (user.actCount >= 3) {
       seal.replyToSender(ctx, msg, "您今日扮演次数已达上限，请明日再来。");
